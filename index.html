@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Furniture &amp; Traffic Flow — Ground &amp; Upper Floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F3EC;
+    --panel:#EFE6D6;
+    --panel-2:#FBF8F2;
+    --ink:#2A2620;
+    --ink-soft:#6B6255;
+    --oak:#B4855A;
+    --oak-dark:#8C6239;
+    --line:#D8CDB8;
+    --flow:#A85C3D;
+    --sage:#8FA07D;
+    --wet:#C9C0AC;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg:#211E19; --panel:#2C2820; --panel-2:#26221C; --ink:#EFE8DA; --ink-soft:#B7AC98;
+      --line:#463F32; --oak:#C99A6C; --oak-dark:#D8AE81; --wet:#4A4335; --sage:#93A87F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#211E19; --panel:#2C2820; --panel-2:#26221C; --ink:#EFE8DA; --ink-soft:#B7AC98;
+    --line:#463F32; --oak:#C99A6C; --oak-dark:#D8AE81; --wet:#4A4335; --sage:#93A87F;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  header.top{
+    padding:40px 0 28px; border-bottom:1px solid var(--line);
+  }
+  .kicker{ font-size:13px; letter-spacing:0.04em; color:var(--ink-soft); margin:0 0 10px; }
+  h1{
+    font-family:'Fraunces',serif; font-weight:500; font-size:clamp(28px,4vw,42px);
+    line-height:1.08; margin:0 0 12px; max-width:18ch;
+  }
+  header.top p{ max-width:62ch; color:var(--ink-soft); font-size:15.5px; line-height:1.6; margin:0; }
+
+  nav.tabs{
+    display:flex; gap:8px; margin:28px 0 0; flex-wrap:wrap;
+  }
+  nav.tabs button{
+    font-family:'Inter',sans-serif; font-size:14.5px; font-weight:500; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--line); border-radius:999px;
+    padding:10px 20px; cursor:pointer; transition:background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  nav.tabs button:hover{ border-color:var(--oak); color:var(--ink); }
+  nav.tabs button.active{ background:var(--oak); border-color:var(--oak); color:#fff; }
+  nav.tabs button:focus-visible{ outline:2px solid var(--oak); outline-offset:2px; }
+
+  main{ padding:36px 0 80px; }
+  .floor-panel{ display:none; }
+  .floor-panel.active{ display:block; }
+
+  .layout-grid{
+    display:grid; grid-template-columns: minmax(0,1.55fr) minmax(260px,0.9fr);
+    gap:32px; align-items:start;
+  }
+  @media (max-width:900px){ .layout-grid{ grid-template-columns:1fr; } }
+
+  .plan-card{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:18px;
+    padding:20px 20px 14px; overflow:hidden;
+  }
+  .plan-card svg{ width:100%; height:auto; display:block; }
+  .plan-caption{
+    display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+    padding:12px 4px 4px; font-size:12.5px; color:var(--ink-soft); flex-wrap:wrap;
+  }
+
+  .side{ display:flex; flex-direction:column; gap:18px; }
+  .card{
+    background:var(--panel); border-radius:16px; padding:20px 22px;
+  }
+  .card h3{
+    font-family:'Fraunces',serif; font-weight:500; font-size:17px; margin:0 0 12px;
+  }
+  .legend-grid{ display:grid; grid-template-columns:1fr; gap:9px; }
+  .legend-row{ display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--ink-soft); }
+  .swatch{ width:16px; height:16px; border-radius:4px; flex:none; border:1px solid rgba(0,0,0,0.08); }
+  .sym{ width:22px; height:16px; flex:none; display:flex; align-items:center; justify-content:center; }
+
+  .clearance-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .clearance-list li{ font-size:13.5px; line-height:1.5; color:var(--ink-soft); display:flex; gap:10px; }
+  .clearance-list li b{ color:var(--ink); font-weight:600; white-space:nowrap; }
+
+  .note{
+    font-size:12.5px; line-height:1.6; color:var(--ink-soft); background:var(--panel);
+    border-left:3px solid var(--oak); border-radius:8px; padding:14px 16px; margin-top:6px;
+  }
+
+  footer{
+    border-top:1px solid var(--line); padding:26px 0 40px; font-size:12.5px; color:var(--ink-soft);
+  }
+
+  /* touch target sizing */
+  nav.tabs button{ min-height:40px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <p class="kicker">Warm Japandi Home — Technical Presentation · 01</p>
+    <h1>Furniture layouts &amp; traffic flow</h1>
+    <p>Redrawn schematically from your supplied floor plans, preserving room relationships, doors, windows and stair positions. Furniture is scaled proportionally to each room. All dimensions shown are <strong>indicative — proposed for spatial planning, to be verified against the source CAD drawings</strong> before ordering or construction.</p>
+    <nav class="tabs" role="tablist" aria-label="Select floor">
+      <button class="active" data-floor="ground" role="tab" aria-selected="true">Ground Floor</button>
+      <button data-floor="upper" role="tab" aria-selected="false">Upper Floor</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ============ GROUND FLOOR ============ -->
+    <section class="floor-panel active" id="panel-ground">
+      <div class="layout-grid">
+        <div class="plan-card">
+          <svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ground floor furniture layout">
+            <defs>
+              <marker id="arrowFlowG" markerWidth="9" markerHeight="9" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="var(--flow)"></path>
+              </marker>
+              <marker id="dimArrowG" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,1 L7,4 L0,7" fill="none" stroke="var(--ink-soft)" stroke-width="1.2"></path>
+              </marker>
+              <pattern id="stepsG" width="16" height="16" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="16" stroke="var(--line)" stroke-width="3"></line>
+              </pattern>
+            </defs>
+
+            <rect x="0" y="0" width="1000" height="640" fill="none"></rect>
+
+            <!-- ===== zoning fills ===== -->
+            <rect x="70" y="90" width="360" height="240" fill="var(--oak)" opacity="0.09"></rect> <!-- living -->
+            <rect x="70" y="330" width="360" height="240" fill="var(--oak)" opacity="0.055"></rect> <!-- dining -->
+            <rect x="430" y="90" width="500" height="240" fill="var(--ink)" opacity="0.045"></rect> <!-- kitchen -->
+            <rect x="480" y="420" width="110" height="150" fill="var(--wet)" opacity="0.55"></rect> <!-- wc -->
+            <rect x="590" y="420" width="110" height="150" fill="var(--oak)" opacity="0.13"></rect> <!-- closet -->
+            <rect x="780" y="420" width="150" height="150" fill="var(--ink)" opacity="0.04"></rect> <!-- laundry -->
+            <rect x="610" y="330" width="190" height="90" fill="url(#stepsG)" opacity="0.5"></rect> <!-- stairs -->
+
+            <!-- zoning divider (dashed, not a wall) between living & dining -->
+            <line x1="70" y1="330" x2="430" y2="330" stroke="var(--line)" stroke-width="1.4" stroke-dasharray="3 6"></line>
+
+            <!-- ===== walls ===== -->
+            <g stroke="var(--ink)" stroke-linecap="square">
+              <!-- exterior -->
+              <line x1="70" y1="90" x2="930" y2="90" stroke-width="6"></line>
+              <line x1="930" y1="90" x2="930" y2="570" stroke-width="6"></line>
+              <line x1="70" y1="570" x2="930" y2="570" stroke-width="6"></line>
+              <line x1="70" y1="90" x2="70" y2="230" stroke-width="6"></line>
+              <line x1="70" y1="280" x2="70" y2="470" stroke-width="6"></line>
+              <line x1="70" y1="520" x2="70" y2="570" stroke-width="6"></line>
+              <!-- interior: living/kitchen divider -->
+              <line x1="430" y1="90" x2="430" y2="150" stroke-width="4"></line>
+              <line x1="430" y1="200" x2="430" y2="330" stroke-width="4"></line>
+              <!-- fridge/pantry column -->
+              <line x1="460" y1="150" x2="460" y2="330" stroke-width="3"></line>
+              <!-- WC box -->
+              <line x1="480" y1="420" x2="520" y2="420" stroke-width="3"></line>
+              <line x1="480" y1="420" x2="480" y2="570" stroke-width="3"></line>
+              <line x1="590" y1="420" x2="590" y2="570" stroke-width="3"></line>
+              <!-- closet box -->
+              <line x1="610" y1="420" x2="670" y2="420" stroke-width="3"></line>
+              <line x1="700" y1="420" x2="700" y2="570" stroke-width="3"></line>
+              <!-- laundry box -->
+              <line x1="780" y1="420" x2="780" y2="460" stroke-width="3"></line>
+              <line x1="780" y1="510" x2="780" y2="570" stroke-width="3"></line>
+              <line x1="780" y1="420" x2="930" y2="420" stroke-width="3"></line>
+            </g>
+
+            <!-- windows (ticks across exterior wall) -->
+            <g stroke="var(--ink)" stroke-width="2.5">
+              <line x1="66" y1="180" x2="74" y2="180"></line><line x1="66" y1="230" x2="74" y2="230"></line>
+              <line x1="66" y1="380" x2="74" y2="380"></line><line x1="66" y1="430" x2="74" y2="430"></line>
+              <line x1="926" y1="180" x2="934" y2="180"></line><line x1="926" y1="230" x2="934" y2="230"></line>
+              <line x1="926" y1="460" x2="934" y2="460"></line><line x1="926" y1="510" x2="934" y2="510"></line>
+              <rect x="66" y="180" width="8" height="50" fill="none"></rect>
+              <rect x="66" y="380" width="8" height="50" fill="none"></rect>
+              <rect x="926" y="180" width="8" height="50" fill="none"></rect>
+              <rect x="926" y="460" width="8" height="50" fill="none"></rect>
+            </g>
+
+            <!-- door swings -->
+            <g fill="none" stroke="var(--ink-soft)" stroke-width="1.4">
+              <path d="M70,230 L70,280 A50,50 0 0 1 120,230"></path>
+              <path d="M70,470 L70,520 A50,50 0 0 1 120,470"></path>
+              <path d="M430,150 L430,200 A50,50 0 0 0 480,150"></path>
+              <path d="M480,420 L520,420 A40,40 0 0 1 480,460"></path>
+              <path d="M610,420 L640,420 A30,30 0 0 1 610,450"></path>
+              <path d="M670,420 L640,420 A30,30 0 0 0 670,450" transform="translate(0,0)"></path>
+              <path d="M780,460 L780,510 A50,50 0 0 0 830,460"></path>
+            </g>
+
+            <!-- stairs steps + label -->
+            <g>
+              <path d="M610,415 L790,415 M610,400 L790,400 M610,385 L790,385 M610,370 L790,370 M610,355 L790,355 M610,340 L790,340"
+                    stroke="var(--ink-soft)" stroke-width="1" opacity="0.5"></path>
+              <text x="705" y="380" text-anchor="middle" font-size="12" fill="var(--ink-soft)" font-weight="600">STAIRS ▲</text>
+              <text x="705" y="393" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">to Upper Floor</text>
+            </g>
+
+            <!-- ===== kitchen appliances ===== -->
+            <g font-size="9.5" fill="var(--ink-soft)" text-anchor="middle">
+              <rect x="480" y="96" width="70" height="20" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+              <text x="515" y="109">Oven</text>
+              <rect x="560" y="96" width="70" height="20" fill="var(--ink)" opacity="0.15" stroke="var(--ink-soft)" stroke-width="1"></rect>
+              <text x="595" y="109">Hob</text>
+              <rect x="640" y="96" width="70" height="20" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+              <text x="675" y="109">Sink</text>
+              <rect x="720" y="96" width="80" height="20" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+              <text x="760" y="109">Dishwasher</text>
+              <text x="475" y="240" font-size="9" text-anchor="start" transform="rotate(-90 475 240)">Fridge / Freezer / Pantry</text>
+              <text x="1030" y="0"></text>
+            </g>
+
+            <!-- ===== FURNITURE — living room ===== -->
+            <g>
+              <!-- storage wall along top wall -->
+              <rect x="90" y="96" width="320" height="20" rx="2" fill="var(--oak-dark)" opacity="0.65"></rect>
+              <line x1="130" y1="96" x2="130" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="170" y1="96" x2="170" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="210" y1="96" x2="210" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="250" y1="96" x2="250" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="290" y1="96" x2="290" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="330" y1="96" x2="330" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <line x1="370" y1="96" x2="370" y2="116" stroke="var(--panel-2)" stroke-width="1" opacity="0.6"></line>
+              <text x="250" y="88" text-anchor="middle" font-size="9.5" fill="var(--oak-dark)" font-weight="600">FULL-HEIGHT STORAGE WALL — flush, push-open</text>
+
+              <!-- rug -->
+              <rect x="100" y="145" width="270" height="150" rx="14" fill="var(--oak)" opacity="0.14"></rect>
+
+              <!-- modular sofa (L shape) -->
+              <rect x="120" y="150" width="180" height="55" rx="10" fill="var(--oak)" opacity="0.55"></rect>
+              <rect x="120" y="150" width="55" height="130" rx="10" fill="var(--oak)" opacity="0.55"></rect>
+              <text x="210" y="182" text-anchor="middle" font-size="9.5" fill="var(--panel-2)">Modular sofa</text>
+
+              <!-- coffee table (organic) -->
+              <ellipse cx="240" cy="245" rx="52" ry="30" fill="var(--oak-dark)" opacity="0.5"></ellipse>
+              <text x="240" y="249" text-anchor="middle" font-size="9" fill="var(--panel-2)">Coffee table</text>
+
+              <!-- lounge chair -->
+              <circle cx="345" cy="270" r="32" fill="var(--oak)" opacity="0.5"></circle>
+              <text x="345" y="273" text-anchor="middle" font-size="8.5" fill="var(--panel-2)">Lounge</text>
+
+              <!-- clearance dimension: sofa to table -->
+              <line x1="210" y1="215" x2="210" y2="228" stroke="var(--ink-soft)" stroke-width="1"></line>
+              <line x1="200" y1="221" x2="220" y2="221" stroke="var(--ink-soft)" stroke-width="1" marker-start="url(#dimArrowG)" marker-end="url(#dimArrowG)"></line>
+              <text x="226" y="224" font-size="8.5" fill="var(--ink-soft)">≈450mm proposed</text>
+
+              <text x="180" y="130" font-size="13" font-weight="600" fill="var(--ink)">Living Room</text>
+            </g>
+
+            <!-- ===== FURNITURE — dining ===== -->
+            <g>
+              <rect x="120" y="440" width="220" height="90" rx="10" fill="var(--oak)" opacity="0.15"></rect>
+              <rect x="140" y="450" width="180" height="70" rx="14" fill="var(--oak-dark)" opacity="0.55"></rect>
+              <text x="230" y="489" text-anchor="middle" font-size="9.5" fill="var(--panel-2)">Dining table — 6 seats</text>
+              <!-- chairs -->
+              <circle cx="170" cy="440" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <circle cx="230" cy="440" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <circle cx="290" cy="440" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <circle cx="170" cy="530" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <circle cx="230" cy="530" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <circle cx="290" cy="530" r="9" fill="var(--oak)" opacity="0.6"></circle>
+              <!-- pendant -->
+              <circle cx="230" cy="485" r="4" fill="var(--ink-soft)"></circle>
+              <line x1="230" y1="470" x2="230" y2="481" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="2 2"></line>
+              <!-- sideboard -->
+              <rect x="140" y="548" width="140" height="16" rx="3" fill="var(--oak)" opacity="0.4"></rect>
+              <text x="210" y="559" text-anchor="middle" font-size="7.5" fill="var(--panel-2)">Sideboard</text>
+              <text x="145" y="405" font-size="13" font-weight="600" fill="var(--ink)">Dining Area</text>
+
+              <!-- chair pull-out clearance -->
+              <line x1="345" y1="440" x2="345" y2="530" stroke="var(--ink-soft)" stroke-width="1" marker-start="url(#dimArrowG)" marker-end="url(#dimArrowG)"></line>
+              <text x="352" y="488" font-size="8.5" fill="var(--ink-soft)">≈950mm proposed</text>
+            </g>
+
+            <!-- WC / closet / laundry labels -->
+            <text x="535" y="500" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">WC / Shower</text>
+            <text x="645" y="500" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">Walk-in Closet</text>
+            <text x="855" y="470" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">Laundry / Utility</text>
+            <rect x="800" y="440" width="34" height="18" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+            <text x="817" y="453" text-anchor="middle" font-size="7.5" fill="var(--ink-soft)">Sink</text>
+
+            <!-- ===== traffic flow ===== -->
+            <g fill="none" stroke="var(--flow)" stroke-width="2.2" stroke-dasharray="1 7" stroke-linecap="round">
+              <path d="M95,255 C160,300 160,340 160,400" marker-end="url(#arrowFlowG)"></path>
+              <path d="M95,495 C150,470 150,440 210,440" marker-end="url(#arrowFlowG)"></path>
+              <path d="M400,300 C480,330 520,340 600,375" marker-end="url(#arrowFlowG)"></path>
+              <path d="M600,390 C650,410 700,420 760,455" marker-end="url(#arrowFlowG)"></path>
+            </g>
+            <text x="470" y="605" text-anchor="middle" font-size="10" fill="var(--flow)" font-weight="600">— — ▸ Primary circulation (entry → living/dining → kitchen → stair / utility)</text>
+            <text x="470" y="622" text-anchor="middle" font-size="9" fill="var(--ink-soft)">Schematic — redrawn proportionally from client plan · not to scale · verify all dimensions on site</text>
+          </svg>
+        </div>
+
+        <div class="side">
+          <div class="card">
+            <h3>Reading the drawing</h3>
+            <div class="legend-grid">
+              <div class="legend-row"><span class="swatch" style="background:var(--oak);opacity:.5"></span> Living zone furniture</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--oak-dark);opacity:.65"></span> Concealed storage / built-in</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--wet)"></span> Wet room (WC)</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--ink);opacity:.1"></span> Kitchen zone</div>
+              <div class="legend-row"><span class="sym"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="var(--flow)" stroke-width="2" stroke-dasharray="1 5"></line></svg></span> Primary traffic flow</div>
+              <div class="legend-row"><span class="sym"><svg width="20" height="14"><path d="M2,2 L2,10 A6,6 0 0 0 12,2" fill="none" stroke="var(--ink-soft)" stroke-width="1.3"></path></svg></span> Door swing</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Key clearances (proposed)</h3>
+            <ul class="clearance-list">
+              <li><b>≈900–1000mm</b> Main circulation path width, entry to kitchen/stair</li>
+              <li><b>≈450mm</b> Sofa to coffee table</li>
+              <li><b>≈950mm</b> Dining chair pull-out + walk-behind</li>
+              <li><b>≈700mm</b> Clear width past storage wall doors when open</li>
+              <li><b>600mm+</b> Depth reserved for full-height storage wall run</li>
+            </ul>
+            <p class="note">The storage wall is planned along the one uninterrupted wall in the living zone (no windows or doors), so it reads as architecture rather than furniture. Depth and exact run length should be confirmed once wall dimensions are verified.</p>
+          </div>
+
+          <div class="card">
+            <h3>Design logic</h3>
+            <p class="note" style="margin-top:0;">Living and dining stay one open volume, as in your existing plan — no new walls proposed. Seating turns to face the storage wall rather than the kitchen opening, so the lounge feels enclosed and calm even though the plan is open. The dining table sits on the through-route between entry and kitchen/stairs, so it doubles as a family activity table without blocking circulation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ UPPER FLOOR ============ -->
+    <section class="floor-panel" id="panel-upper">
+      <div class="layout-grid">
+        <div class="plan-card">
+          <svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Upper floor furniture layout">
+            <defs>
+              <marker id="arrowFlowU" markerWidth="9" markerHeight="9" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="var(--flow)"></path>
+              </marker>
+              <marker id="dimArrowU" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,1 L7,4 L0,7" fill="none" stroke="var(--ink-soft)" stroke-width="1.2"></path>
+              </marker>
+              <pattern id="stepsU" width="16" height="16" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="16" stroke="var(--line)" stroke-width="3"></line>
+              </pattern>
+            </defs>
+
+            <!-- zoning fills -->
+            <rect x="70" y="90" width="310" height="480" fill="var(--oak)" opacity="0.09"></rect> <!-- bedroom 1 -->
+            <rect x="380" y="90" width="310" height="240" fill="var(--ink)" opacity="0.035"></rect> <!-- hall -->
+            <rect x="380" y="390" width="110" height="180" fill="var(--oak)" opacity="0.13"></rect> <!-- closet A -->
+            <rect x="490" y="390" width="160" height="180" fill="var(--wet)" opacity="0.55"></rect> <!-- bathroom -->
+            <rect x="650" y="390" width="130" height="180" fill="var(--oak)" opacity="0.13"></rect> <!-- closet B -->
+            <rect x="690" y="260" width="110" height="310" fill="var(--ink)" opacity="0.035"></rect> <!-- landing/corridor -->
+            <rect x="800" y="90" width="130" height="480" fill="var(--sage)" opacity="0.12"></rect> <!-- bedroom 2 -->
+            <rect x="690" y="90" width="190" height="170" fill="url(#stepsU)" opacity="0.5"></rect> <!-- stairs -->
+
+            <!-- walls -->
+            <g stroke="var(--ink)" stroke-linecap="square">
+              <line x1="70" y1="90" x2="930" y2="90" stroke-width="6"></line>
+              <line x1="930" y1="90" x2="930" y2="570" stroke-width="6"></line>
+              <line x1="70" y1="570" x2="930" y2="570" stroke-width="6"></line>
+              <line x1="70" y1="90" x2="70" y2="180" stroke-width="6"></line>
+              <line x1="70" y1="260" x2="70" y2="380" stroke-width="6"></line>
+              <line x1="70" y1="460" x2="70" y2="570" stroke-width="6"></line>
+
+              <line x1="380" y1="90" x2="380" y2="250" stroke-width="4"></line>
+              <line x1="380" y1="310" x2="380" y2="390" stroke-width="4"></line>
+              <line x1="380" y1="390" x2="380" y2="570" stroke-width="4"></line>
+
+              <line x1="380" y1="390" x2="400" y2="390" stroke-width="3"></line>
+              <line x1="450" y1="390" x2="490" y2="390" stroke-width="3"></line>
+              <line x1="490" y1="390" x2="490" y2="570" stroke-width="3"></line>
+              <line x1="550" y1="390" x2="650" y2="390" stroke-width="3"></line>
+              <line x1="650" y1="390" x2="650" y2="570" stroke-width="3"></line>
+              <line x1="660" y1="390" x2="760" y2="390" stroke-width="3"></line>
+              <line x1="780" y1="390" x2="780" y2="570" stroke-width="3"></line>
+
+              <line x1="800" y1="90" x2="800" y2="440" stroke-width="4"></line>
+              <line x1="800" y1="520" x2="800" y2="570" stroke-width="4"></line>
+
+              <line x1="690" y1="260" x2="800" y2="260" stroke-width="3"></line>
+            </g>
+
+            <!-- windows -->
+            <g stroke="var(--ink)" stroke-width="2.5">
+              <line x1="66" y1="200" x2="74" y2="200"></line><line x1="66" y1="250" x2="74" y2="250"></line>
+              <line x1="66" y1="380" x2="74" y2="380"></line><line x1="66" y1="430" x2="74" y2="430"></line>
+              <line x1="926" y1="200" x2="934" y2="200"></line><line x1="926" y1="250" x2="934" y2="250"></line>
+              <line x1="850" y1="86" x2="850" y2="94"></line><line x1="900" y1="86" x2="900" y2="94"></line>
+              <rect x="66" y="200" width="8" height="50" fill="none"></rect>
+              <rect x="66" y="380" width="8" height="50" fill="none"></rect>
+              <rect x="926" y="200" width="8" height="50" fill="none"></rect>
+            </g>
+            <!-- long hall window strip -->
+            <line x1="460" y1="90" x2="650" y2="90" stroke="var(--ink)" stroke-width="2.5"></line>
+            <line x1="460" y1="86" x2="460" y2="94" stroke="var(--ink)" stroke-width="2"></line>
+            <line x1="650" y1="86" x2="650" y2="94" stroke="var(--ink)" stroke-width="2"></line>
+
+            <!-- doors -->
+            <g fill="none" stroke="var(--ink-soft)" stroke-width="1.4">
+              <path d="M380,250 L380,310 A60,60 0 0 1 440,250"></path>
+              <path d="M380,390 L400,390 A30,30 0 0 1 380,420"></path>
+              <path d="M490,390 L550,390 A60,60 0 0 1 490,450"></path>
+              <path d="M650,390 L660,390 A30,30 0 0 1 650,420"></path>
+              <path d="M760,390 L730,390 A30,30 0 0 0 760,420"></path>
+              <path d="M800,440 L800,520 A80,80 0 0 0 880,440"></path>
+            </g>
+
+            <!-- linen closet -->
+            <rect x="400" y="100" width="40" height="55" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+            <text x="420" y="130" text-anchor="middle" font-size="7.5" fill="var(--ink-soft)" transform="rotate(90 420 130)">Linen</text>
+
+            <!-- stairs -->
+            <path d="M700,255 L790,255 M700,240 L790,240 M700,225 L790,225 M700,210 L790,210 M700,195 L790,195 M700,180 L790,180 M700,165 L790,165 M700,150 L790,150 M700,135 L790,135 M700,120 L790,120"
+                  stroke="var(--ink-soft)" stroke-width="1" opacity="0.5"></path>
+            <text x="745" y="185" text-anchor="middle" font-size="12" fill="var(--ink-soft)" font-weight="600">STAIRS ▼</text>
+            <text x="745" y="198" text-anchor="middle" font-size="9" fill="var(--ink-soft)">to Ground Floor</text>
+
+            <!-- ===== Bedroom 01 furniture ===== -->
+            <g>
+              <rect x="130" y="200" width="230" height="10" fill="none"></rect>
+              <rect x="150" y="200" width="230" height="10" fill="none"></rect>
+              <rect x="140" y="200" width="240" height="220" rx="14" fill="var(--oak)" opacity="0.13"></rect>
+              <!-- bed -->
+              <rect x="170" y="220" width="180" height="150" rx="10" fill="var(--oak)" opacity="0.55"></rect>
+              <rect x="170" y="220" width="180" height="22" rx="4" fill="var(--oak-dark)" opacity="0.7"></rect>
+              <text x="260" y="300" text-anchor="middle" font-size="10" fill="var(--panel-2)">Bed — light oak frame</text>
+              <!-- bedside tables -->
+              <rect x="140" y="235" width="26" height="26" rx="4" fill="var(--oak-dark)" opacity="0.5"></rect>
+              <rect x="140" y="335" width="26" height="26" rx="4" fill="var(--oak-dark)" opacity="0.5"></rect>
+              <!-- bench -->
+              <rect x="150" y="420" width="120" height="24" rx="8" fill="var(--oak)" opacity="0.4"></rect>
+              <text x="210" y="437" text-anchor="middle" font-size="8" fill="var(--panel-2)">Window bench</text>
+              <text x="150" y="180" font-size="13" font-weight="600" fill="var(--ink)">Bedroom 01</text>
+              <text x="150" y="500" font-size="9.5" fill="var(--ink-soft)">Concealed wardrobe via</text>
+              <text x="150" y="513" font-size="9.5" fill="var(--ink-soft)">flush-door walk-in closet →</text>
+            </g>
+
+            <!-- Walk-in closet A flush door indicator -->
+            <rect x="380" y="392" width="8" height="60" fill="var(--oak-dark)" opacity="0.5"></rect>
+            <text x="435" y="480" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">Walk-in Closet</text>
+
+            <!-- Bathroom -->
+            <text x="570" y="410" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">Bathroom</text>
+            <circle cx="520" cy="440" r="10" fill="none" stroke="var(--ink-soft)" stroke-width="1"></circle>
+            <rect x="600" y="425" width="35" height="30" fill="none" stroke="var(--ink-soft)" stroke-width="1"></rect>
+
+            <text x="715" y="480" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">Walk-in Closet</text>
+
+            <!-- ===== Bedroom 02 (kid) furniture ===== -->
+            <g>
+              <rect x="815" y="110" width="100" height="110" rx="10" fill="var(--sage)" opacity="0.55"></rect>
+              <rect x="815" y="110" width="100" height="22" rx="4" fill="var(--sage)" opacity="0.8"></rect>
+              <text x="865" y="170" text-anchor="middle" font-size="9" fill="var(--panel-2)">Storage bed</text>
+              <!-- bookshelf -->
+              <rect x="805" y="250" width="18" height="150" fill="var(--oak-dark)" opacity="0.5"></rect>
+              <text x="812" y="330" font-size="8" fill="var(--panel-2)" transform="rotate(90 812 330)">Bookshelf</text>
+              <!-- rug -->
+              <rect x="815" y="245" width="100" height="180" rx="10" fill="var(--sage)" opacity="0.13"></rect>
+              <!-- desk -->
+              <rect x="845" y="440" width="75" height="34" rx="6" fill="var(--oak)" opacity="0.5"></rect>
+              <text x="882" y="461" text-anchor="middle" font-size="8" fill="var(--panel-2)">Study desk</text>
+              <circle cx="882" cy="485" r="10" fill="var(--oak-dark)" opacity="0.5"></circle>
+              <text x="815" y="98" font-size="12" font-weight="600" fill="var(--ink)">Bedroom 02</text>
+              <text x="815" y="533" font-size="9" fill="var(--ink-soft)">Wardrobe in</text>
+              <text x="815" y="546" font-size="9" fill="var(--ink-soft)">walk-in closet ←</text>
+            </g>
+
+            <!-- clearance callout -->
+            <line x1="360" y1="220" x2="360" y2="370" stroke="var(--ink-soft)" stroke-width="1" marker-start="url(#dimArrowU)" marker-end="url(#dimArrowU)"></line>
+            <text x="368" y="298" font-size="8.5" fill="var(--ink-soft)">≈700mm proposed</text>
+            <text x="368" y="309" font-size="8" fill="var(--ink-soft)">clearance, bed to wall</text>
+
+            <!-- traffic flow -->
+            <g fill="none" stroke="var(--flow)" stroke-width="2.2" stroke-dasharray="1 7" stroke-linecap="round">
+              <path d="M745,260 C650,280 500,290 420,270" marker-end="url(#arrowFlowU)"></path>
+              <path d="M745,260 C745,320 745,380 745,420" marker-end="url(#arrowFlowU)"></path>
+              <path d="M745,420 C760,440 790,450 815,455" marker-end="url(#arrowFlowU)"></path>
+              <path d="M745,420 C650,430 570,440 540,440" marker-end="url(#arrowFlowU)"></path>
+            </g>
+            <text x="470" y="605" text-anchor="middle" font-size="10" fill="var(--flow)" font-weight="600">— — ▸ Primary circulation (stair landing → bedrooms, bathroom, closets)</text>
+            <text x="470" y="622" text-anchor="middle" font-size="9" fill="var(--ink-soft)">Schematic — redrawn proportionally from client plan · not to scale · verify all dimensions on site</text>
+          </svg>
+        </div>
+
+        <div class="side">
+          <div class="card">
+            <h3>Reading the drawing</h3>
+            <div class="legend-grid">
+              <div class="legend-row"><span class="swatch" style="background:var(--oak);opacity:.5"></span> Bedroom 01 furniture</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--sage);opacity:.6"></span> Bedroom 02 (kid) furniture</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--wet)"></span> Bathroom</div>
+              <div class="legend-row"><span class="swatch" style="background:var(--oak);opacity:.13"></span> Walk-in closets (concealed wardrobes)</div>
+              <div class="legend-row"><span class="sym"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="var(--flow)" stroke-width="2" stroke-dasharray="1 5"></line></svg></span> Primary traffic flow</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Key clearances (proposed)</h3>
+            <ul class="clearance-list">
+              <li><b>≈700mm</b> Clearance each side of bed to wall/furniture</li>
+              <li><b>900mm</b> Minimum clear width, hall/landing route</li>
+              <li><b>900mm</b> Wardrobe door swing clearance</li>
+              <li><b>600mm</b> Desk clearance for chair pull-out, Bedroom 02</li>
+            </ul>
+            <p class="note">Both existing walk-in closets are proposed as the "wardrobes" for each bedroom, refitted internally with a flush, handle-less door facing into the room — so no freestanding wardrobe competes with the calm wall lines you asked for.</p>
+          </div>
+
+          <div class="card">
+            <h3>Design logic</h3>
+            <p class="note" style="margin-top:0;">Bedroom 01 keeps the bed anchored to the one solid wall shared with the hall, facing the windows for morning light. Bedroom 02's storage bed sits opposite the door under natural light from its own window, with desk and bookshelf run along the corridor wall — so toys and books stay a step from the door, easy to tidy, out of the sightline when the door's open.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Warm Japandi Home — Furniture &amp; Traffic Flow · Schematic drawings for design development only, not for construction. All room proportions, dimensions and clearances are proposed and must be verified against the source architectural drawings before procurement, fabrication or building work.
+  </footer>
+</div>
+
+<script>
+  const buttons = document.querySelectorAll('nav.tabs button');
+  const panels = { ground: document.getElementById('panel-ground'), upper: document.getElementById('panel-upper') };
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      Object.values(panels).forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      panels[btn.dataset.floor].classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
